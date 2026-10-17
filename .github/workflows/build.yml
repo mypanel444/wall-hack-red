@@ -8,21 +8,30 @@ jobs:
     - name: Setup NDK
       uses: nttld/setup-ndk@v1
       with:
-        ndk-version: r26b
+        ndk-version: r25c
     - name: Clone and Build Dobby
       run: |
         git clone --recursive https://github.com/jmpews/Dobby.git
         cd Dobby
         mkdir build
         cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-26 -DCMAKE_BUILD_TYPE=Release ..
-        # Binago natin ito: Tinanggal yung -j4 para isa-isa lang (iwas out of memory)
+        # Dinagdag natin yung C_COMPILER_TARGET at CXX_COMPILER_TARGET para sure
+        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+              -DANDROID_ABI=arm64-v8a \
+              -DANDROID_PLATFORM=android-26 \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_COMPILER_TARGET=aarch64-linux-android \
+              -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-android ..
         make
     - name: Build Long Range SO
       run: |
         mkdir build
         cd build
-        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-26 ..
+        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+              -DANDROID_ABI=arm64-v8a \
+              -DANDROID_PLATFORM=android-26 \
+              -DCMAKE_C_COMPILER_TARGET=aarch64-linux-android \
+              -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-android ..
         make
     - name: Upload SO
       uses: actions/upload-artifact@v4
