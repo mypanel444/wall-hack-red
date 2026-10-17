@@ -6,7 +6,7 @@
 #include <string>
 #include <pthread.h>
 #include <stdint.h>
-#include "dobby.h"
+#include "And64InlineHook.hpp"
 
 #define LOG_TAG "LongRangeHook"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -39,7 +39,7 @@ void* MonitorFileThread(void* arg) {
 
 __attribute__((constructor))
 void on_load() {
-    LOGI("Long Range Hook Loaded!");
+    LOGI("Long Range Hook Loaded (Using And64InlineHook)!");
     
     void* handle = dlopen("libil2cpp.so", RTLD_LAZY);
     if (!handle) {
@@ -52,7 +52,7 @@ void on_load() {
         uintptr_t base = (uintptr_t)info.dli_fbase;
         void* target = (void*)(base + 0x502200C);
         
-        DobbyHook(target, (void*)hooked_get_farClipPlane, (void**)&orig_get_farClipPlane);
+        A64HookFunction(target, (void*)hooked_get_farClipPlane, (void**)&orig_get_farClipPlane);
         LOGI("Hooked farClipPlane successfully at %p", target);
         
         pthread_t t;
