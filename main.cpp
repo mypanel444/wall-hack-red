@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <pthread.h>
+#include <stdint.h>
 #include "dobby.h"
 
 #define LOG_TAG "LongRangeHook"
@@ -13,15 +14,13 @@
 bool isLongRangeEnabled = false;
 float (*orig_get_farClipPlane)(void* __this) = nullptr;
 
-// Ito yung papalit sa original na function
 float hooked_get_farClipPlane(void* __this) {
     if (isLongRangeEnabled) {
-        return 10000.0f; // Maximum view distance
+        return 10000.0f; 
     }
     return orig_get_farClipPlane(__this);
 }
 
-// Thread na magbabasa sa file natin
 void* MonitorFileThread(void* arg) {
     while (true) {
         std::ifstream file("/storage/emulated/0/DaddyHok/longrange.txt");
@@ -33,12 +32,11 @@ void* MonitorFileThread(void* arg) {
             }
             file.close();
         }
-        sleep(1); // Check every 1 second
+        sleep(1);
     }
     return nullptr;
 }
 
-// Auto-run kapag na-load yung .so
 __attribute__((constructor))
 void on_load() {
     LOGI("Long Range Hook Loaded!");
@@ -52,12 +50,11 @@ void on_load() {
     Dl_info info;
     if (dladdr(handle, &info) != 0) {
         uintptr_t base = (uintptr_t)info.dli_fbase;
-        void* target = (void*)(base + 0x502200C); // RVA ng get_farClipPlane
+        void* target = (void*)(base + 0x502200C);
         
         DobbyHook(target, (void*)hooked_get_farClipPlane, (void**)&orig_get_farClipPlane);
         LOGI("Hooked farClipPlane successfully at %p", target);
         
-        // Simulan yung thread na magbabasa ng file
         pthread_t t;
         pthread_create(&t, nullptr, MonitorFileThread, nullptr);
     }
